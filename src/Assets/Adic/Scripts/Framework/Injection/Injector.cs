@@ -214,27 +214,52 @@ namespace Adic.Injection {
             // Array is used for multiple injection.
             // So, when the type is an array, the type to be read from the bindings list is the element type.
             Type typeToGet;
-            IList<BindingInfo> bindings;
+            IList<BindingInfo> bindings = new List<BindingInfo>();
             Boolean typeIsnull = type == null;
-            if (typeIsnull) {
+            if (typeIsnull)
+            {
                 typeToGet = typeof(object);
 
                 // If no type is provided, look for bindings by identifier.
-                bindings = this.binder.GetBindingsFor(identifier);
-            } else {
-                if (type.IsArray) {
+                foreach (var containerData in Adic.ContextRoot.containersData)
+                {
+                    bindings = containerData.container.GetBindingsFor(identifier);
+
+                    if (bindings != null)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                if (type.IsArray)
+                {
                     typeToGet = type.GetElementType();
-                } else {
+                }
+                else
+                {
                     typeToGet = type;
                 }
-			
+
                 // If a type is provided, look for bindings by identifier.
-                bindings = this.binder.GetBindingsFor(typeToGet);
+                //bindings = this.binder.GetBindingsFor(typeToGet);
+
+                foreach (var containerData in Adic.ContextRoot.containersData)
+                {
+                    bindings = containerData.container.GetBindingsFor(typeToGet);
+
+                    if (bindings != null)
+                    {
+                        break;
+                    }
+                }
             }
 
             IList<object> instances = new List<object>();
 
-            if (bindings == null) {
+            if (bindings == null || bindings.Count == 0)
+            {
                 if (alwaysResolve || this.resolutionMode == ResolutionMode.ALWAYS_RESOLVE) {
                     if (!(typeToGet.IsInterface && type.IsArray)) {
                         instances.Add(this.Instantiate(typeToGet));
